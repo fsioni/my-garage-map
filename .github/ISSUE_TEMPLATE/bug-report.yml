@@ -1,0 +1,76 @@
+name: Bug report
+description: Report reproducible incorrect behavior
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Remove VINs, registration numbers, local paths,
+        database contents, credentials, and other personal data before submitting.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      options:
+        - label: I searched existing issues for duplicates.
+          required: true
+        - label: This is not a security vulnerability.
+          required: true
+        - label: I removed personal and sensitive data.
+          required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: v1.0.0 or abcdef0
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, architecture, Node.js version, pnpm version, and MCP client.
+      placeholder: macOS 15 arm64, Node 24.4.0, pnpm 10.30.1, Claude Desktop
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Provide exact, minimal steps using synthetic data.
+      placeholder: |
+        1. Configure...
+        2. Call...
+        3. Observe...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs
+      description: Paste stderr logs only after removing private data.
+      render: shell
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context

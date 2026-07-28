@@ -1,0 +1,37 @@
+name: Question or support
+description: Ask about setup, configuration, or usage
+title: "[Question]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please read README.md and SUPPORT.md first. Remove all personal garage data,
+        local paths, credentials, and database contents.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      options:
+        - label: I checked the README, support guide, and existing issues.
+          required: true
+        - label: I removed personal and sensitive data.
+          required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, Node.js version, and MCP client when relevant.
+
+  - type: textarea
+    id: attempted
+    attributes:
+      label: What have you tried?

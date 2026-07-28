@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/fsioni/my-garage-map/security/advisories/new
+    about: Report security issues privately. Do not create a public issue.
+  - name: Support guide
+    url: https://github.com/fsioni/my-garage-map/blob/main/SUPPORT.md
+    about: Read the support and privacy guidance before opening an issue.

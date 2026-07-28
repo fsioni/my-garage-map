@@ -2,8 +2,12 @@ node_modules/
 dist/
 coverage/
 data/
+backups/
 .env
-*.sqlite
-*.sqlite-shm
-*.sqlite-wal
-
+.env.*
+!.env.example
+*.db
+*.db-*
+*.log
+*.sqlite*
+.DS_Store

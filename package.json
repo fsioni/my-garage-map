@@ -2,6 +2,28 @@
   "name": "garage-mcp",
   "version": "1.0.0",
   "description": "Local MCP server for personal vehicle history",
+  "keywords": [
+    "automotive",
+    "effect",
+    "mcp",
+    "model-context-protocol",
+    "sqlite",
+    "typescript",
+    "vehicle-maintenance"
+  ],
+  "homepage": "https://github.com/fsioni/my-garage-map#readme",
+  "bugs": {
+    "url": "https://github.com/fsioni/my-garage-map/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fsioni/my-garage-map.git"
+  },
+  "author": {
+    "name": "Farès SIONI",
+    "url": "https://github.com/fsioni"
+  },
+  "license": "MIT",
   "type": "module",
   "private": true,
   "bin": {
@@ -16,7 +38,10 @@
     "onlyBuiltDependencies": [
       "better-sqlite3",
       "esbuild"
-    ]
+    ],
+    "overrides": {
+      "esbuild": "0.28.1"
+    }
   },
   "scripts": {
     "dev": "tsx src/main.ts",
@@ -48,10 +73,10 @@
     "@fast-check/vitest": "0.4.1",
     "@types/better-sqlite3": "7.6.13",
     "@types/node": "24.10.10",
-    "@vitest/coverage-v8": "4.1.0",
+    "@vitest/coverage-v8": "4.1.10",
     "drizzle-kit": "0.31.10",
-    "tsx": "4.21.0",
+    "tsx": "4.23.1",
     "typescript": "7.0.2",
-    "vitest": "4.1.0"
+    "vitest": "4.1.10"
   }
 }

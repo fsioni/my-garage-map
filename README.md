@@ -1,4 +1,8 @@
-# garage-mcp
+# Garage MCP
+
+[![CI](https://github.com/fsioni/my-garage-map/actions/workflows/ci.yml/badge.svg)](https://github.com/fsioni/my-garage-map/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/fsioni/my-garage-map/actions/workflows/codeql.yml/badge.svg)](https://github.com/fsioni/my-garage-map/actions/workflows/codeql.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 `garage-mcp` is a local, single-user Model Context Protocol server for keeping the history
 of several personal vehicles. It stores mileage, maintenance and parts, standalone expenses,
@@ -20,6 +24,9 @@ through `engines` and `.node-version`.
 ## Install and run
 
 ```bash
+git clone https://github.com/fsioni/my-garage-map.git
+cd my-garage-map
+corepack enable
 pnpm install --frozen-lockfile
 cp .env.example .env
 pnpm db:migrate
@@ -36,6 +43,9 @@ pnpm dev
 The server reserves stdout for JSON-RPC. Structured operational logs go to stderr only.
 The database directory and schema are created at startup, so running `db:migrate` separately
 is explicit but not required.
+
+The package is marked `private` to prevent accidental publication to npm. This does not affect
+cloning, building, or using the open source repository.
 
 ## Configuration
 
@@ -159,7 +169,7 @@ pnpm test:coverage
 pnpm check
 ```
 
-The suite contains more than 350 tests. Unit and property tests cover domain rules, exact money
+The suite contains 370 tests. Unit and property tests cover domain rules, exact money
 handling, date and path validation, recurrence boundaries, configuration, both clocks, document
 storage, and the full in-memory repository. Integration tests use real SQLite `:memory:`
 databases and migrations to verify constraints, indexes, foreign keys, stable ordering,
@@ -175,6 +185,20 @@ entry-point scripts are covered by integration behavior instead of source instru
 
 `pnpm check` runs format checking, lint, strict TypeScript, coverage tests, and the production
 build. CI runs that command on every push and pull request.
+
+## Security and privacy
+
+Garage data may contain sensitive personal information. The database, `.env` files, generated
+build output, coverage output, logs, and common SQLite sidecar files are ignored by Git.
+Nevertheless, review every staged change before pushing and use synthetic data in issues and
+tests.
+
+This server is intended for a trusted local user. It does not provide authentication or sandbox
+the MCP client. Configure `GARAGE_DOCUMENT_ROOT`, protect the checkout and data directory with
+operating-system permissions, and do not expose the stdio process through an untrusted network
+bridge.
+
+Report vulnerabilities privately according to [SECURITY.md](./SECURITY.md).
 
 ## Backup
 
@@ -201,3 +225,13 @@ Restore only while the server is stopped, and keep an additional copy of the rep
 - offset pagination rather than cursor pagination;
 - monetary tool inputs are denominated in euros; stored vehicle currency defaults to EUR;
 - no automatic notifications or background scheduler.
+
+## Contributing
+
+Contributions are welcome. Read [CONTRIBUTING.md](./CONTRIBUTING.md), the
+[Code of Conduct](./CODE_OF_CONDUCT.md), and [SUPPORT.md](./SUPPORT.md) before opening an issue
+or pull request. User-visible changes should be recorded in [CHANGELOG.md](./CHANGELOG.md).
+
+## License
+
+Garage MCP is available under the [MIT License](./LICENSE).
