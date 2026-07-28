@@ -2,7 +2,7 @@ import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Database from "better-sqlite3";
-import { asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import { drizzle, type BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import { Context, Effect, Layer, Schema } from "effect";
@@ -20,6 +20,7 @@ import {
   DatabaseError,
   DocumentNotFound,
   ExpenseNotFound,
+  InvalidMileage,
   MaintenanceEventNotFound,
   MileageRegression,
   ReminderNotFound,
@@ -241,7 +242,11 @@ const makeRepository = (db: BetterSQLite3Database): GarageRepositoryService => {
             .select()
             .from(mileageRecords)
             .where(eq(mileageRecords.vehicleId, vehicleId))
-            .orderBy(desc(mileageRecords.recordedAt), desc(mileageRecords.createdAt))
+            .orderBy(
+              desc(mileageRecords.recordedAt),
+              desc(mileageRecords.createdAt),
+              desc(mileageRecords.id),
+            )
             .limit(1)
             .get(),
         ).pipe(Effect.map((row) => row?.mileageKm ?? vehicle.initialMileageKm)),
@@ -377,24 +382,50 @@ const makeRepository = (db: BetterSQLite3Database): GarageRepositoryService => {
       ),
     recordMileage: (input: RecordMileageInput, now) =>
       currentMileage(input.vehicleId).pipe(
-        Effect.flatMap((current) =>
-          acceptsMileage(current, input.mileageKm)
-            ? databaseEffect("record mileage", () => {
-                const id = createId(MileageRecordIdSchema);
-                db.insert(mileageRecords)
-                  .values({ id, ...input, createdAt: now })
-                  .run();
-                return toMileage(
-                  required(db.select().from(mileageRecords).where(eq(mileageRecords.id, id)).get()),
-                );
-              })
-            : Effect.fail(
-                new MileageRegression({
-                  attempted: input.mileageKm,
-                  current,
-                }),
-              ),
-        ),
+        Effect.flatMap((current) => {
+          if (!acceptsMileage(current, input.mileageKm)) {
+            return Effect.fail(
+              new MileageRegression({
+                attempted: input.mileageKm,
+                current,
+              }),
+            );
+          }
+          return databaseEffect("check duplicate mileage", () =>
+            db
+              .select({ id: mileageRecords.id })
+              .from(mileageRecords)
+              .where(
+                and(
+                  eq(mileageRecords.vehicleId, input.vehicleId),
+                  eq(mileageRecords.mileageKm, input.mileageKm),
+                  eq(mileageRecords.recordedAt, input.recordedAt),
+                  eq(mileageRecords.source, input.source),
+                ),
+              )
+              .get(),
+          ).pipe(
+            Effect.flatMap((duplicate) =>
+              duplicate === undefined
+                ? databaseEffect("record mileage", () => {
+                    const id = createId(MileageRecordIdSchema);
+                    db.insert(mileageRecords)
+                      .values({ id, ...input, createdAt: now })
+                      .run();
+                    return toMileage(
+                      required(
+                        db.select().from(mileageRecords).where(eq(mileageRecords.id, id)).get(),
+                      ),
+                    );
+                  })
+                : Effect.fail(
+                    new InvalidMileage({
+                      reason: "An identical mileage record already exists",
+                    }),
+                  ),
+            ),
+          );
+        }),
       ),
     getCurrentMileage: currentMileage,
     listMileageRecords: (vehicleId, page) =>
@@ -405,7 +436,11 @@ const makeRepository = (db: BetterSQLite3Database): GarageRepositoryService => {
               .select()
               .from(mileageRecords)
               .where(eq(mileageRecords.vehicleId, vehicleId))
-              .orderBy(desc(mileageRecords.recordedAt), desc(mileageRecords.createdAt))
+              .orderBy(
+                desc(mileageRecords.recordedAt),
+                desc(mileageRecords.createdAt),
+                desc(mileageRecords.id),
+              )
               .limit(page.limit)
               .offset(page.offset)
               .all()
@@ -482,7 +517,11 @@ const makeRepository = (db: BetterSQLite3Database): GarageRepositoryService => {
               .select()
               .from(maintenanceEvents)
               .where(eq(maintenanceEvents.vehicleId, vehicleId))
-              .orderBy(desc(maintenanceEvents.performedAt), desc(maintenanceEvents.createdAt))
+              .orderBy(
+                desc(maintenanceEvents.performedAt),
+                desc(maintenanceEvents.createdAt),
+                desc(maintenanceEvents.id),
+              )
               .limit(page.limit)
               .offset(page.offset)
               .all()
@@ -565,7 +604,7 @@ const makeRepository = (db: BetterSQLite3Database): GarageRepositoryService => {
               .select()
               .from(expenses)
               .where(eq(expenses.vehicleId, vehicleId))
-              .orderBy(desc(expenses.incurredAt), desc(expenses.createdAt))
+              .orderBy(desc(expenses.incurredAt), desc(expenses.createdAt), desc(expenses.id))
               .limit(page.limit)
               .offset(page.offset)
               .all()
@@ -720,7 +759,11 @@ const makeRepository = (db: BetterSQLite3Database): GarageRepositoryService => {
                 .select()
                 .from(maintenanceEvents)
                 .where(eq(maintenanceEvents.vehicleId, vehicleId))
-                .orderBy(desc(maintenanceEvents.performedAt), desc(maintenanceEvents.createdAt))
+                .orderBy(
+                  desc(maintenanceEvents.performedAt),
+                  desc(maintenanceEvents.createdAt),
+                  desc(maintenanceEvents.id),
+                )
                 .all()
                 .map((row) => toMaintenance(row, loadParts(row.id))),
             ),

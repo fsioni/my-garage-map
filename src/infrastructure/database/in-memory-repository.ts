@@ -3,6 +3,7 @@ import { GarageRepository, type GarageRepositoryService } from "../../applicatio
 import {
   DocumentNotFound,
   ExpenseNotFound,
+  InvalidMileage,
   MaintenanceEventNotFound,
   MileageRegression,
   ReminderNotFound,
@@ -60,7 +61,8 @@ export const makeInMemoryGarageRepository = (): GarageRepositoryService => {
           .toSorted(
             (left, right) =>
               right.recordedAt.localeCompare(left.recordedAt) ||
-              right.createdAt.localeCompare(left.createdAt),
+              right.createdAt.localeCompare(left.createdAt) ||
+              right.id.localeCompare(left.id),
           )[0];
         return latest?.mileageKm ?? found.initialMileageKm;
       }),
@@ -170,9 +172,21 @@ export const makeInMemoryGarageRepository = (): GarageRepositoryService => {
       ),
     recordMileage: (input, now) =>
       currentMileage(input.vehicleId).pipe(
-        Effect.flatMap((current) => {
+        Effect.flatMap((current): Effect.Effect<MileageRecord, DomainError> => {
           if (input.mileageKm < current) {
             return Effect.fail(new MileageRegression({ attempted: input.mileageKm, current }));
+          }
+          const duplicate = mileageRecordList.some(
+            (record) =>
+              record.vehicleId === input.vehicleId &&
+              record.mileageKm === input.mileageKm &&
+              record.recordedAt === input.recordedAt &&
+              record.source === input.source,
+          );
+          if (duplicate) {
+            return Effect.fail(
+              new InvalidMileage({ reason: "An identical mileage record already exists" }),
+            );
           }
           const created: MileageRecord = {
             id: createId(MileageRecordIdSchema),
@@ -193,7 +207,8 @@ export const makeInMemoryGarageRepository = (): GarageRepositoryService => {
               .toSorted(
                 (left, right) =>
                   right.recordedAt.localeCompare(left.recordedAt) ||
-                  right.createdAt.localeCompare(left.createdAt),
+                  right.createdAt.localeCompare(left.createdAt) ||
+                  right.id.localeCompare(left.id),
               ),
             limit,
             offset,
@@ -264,7 +279,8 @@ export const makeInMemoryGarageRepository = (): GarageRepositoryService => {
               .toSorted(
                 (left, right) =>
                   right.performedAt.localeCompare(left.performedAt) ||
-                  right.createdAt.localeCompare(left.createdAt),
+                  right.createdAt.localeCompare(left.createdAt) ||
+                  right.id.localeCompare(left.id),
               ),
             limit,
             offset,
@@ -349,7 +365,8 @@ export const makeInMemoryGarageRepository = (): GarageRepositoryService => {
               .toSorted(
                 (left, right) =>
                   right.incurredAt.localeCompare(left.incurredAt) ||
-                  right.createdAt.localeCompare(left.createdAt),
+                  right.createdAt.localeCompare(left.createdAt) ||
+                  right.id.localeCompare(left.id),
               ),
             limit,
             offset,
@@ -491,7 +508,12 @@ export const makeInMemoryGarageRepository = (): GarageRepositoryService => {
         Effect.map(({ foundVehicle, currentMileageKm }) => {
           const maintenanceItems = maintenanceRecordList
             .filter((record) => record.vehicleId === vehicleId)
-            .toSorted((left, right) => right.performedAt.localeCompare(left.performedAt));
+            .toSorted(
+              (left, right) =>
+                right.performedAt.localeCompare(left.performedAt) ||
+                right.createdAt.localeCompare(left.createdAt) ||
+                right.id.localeCompare(left.id),
+            );
           const expenseItems = expenseRecordList.filter((record) => record.vehicleId === vehicleId);
           const totalExpensesCents = expenseItems.reduce(
             (total, item) => total + item.amountCents,

@@ -159,16 +159,19 @@ pnpm test:coverage
 pnpm check
 ```
 
-Unit tests include property tests for money round trips, mileage monotonicity, and cost
-aggregation. Integration tests use real SQLite `:memory:` databases and real migrations,
-foreign keys, transactions, rollback, repositories, summaries, and document persistence.
-Contract tests connect an official SDK `Client` to the server through an in-memory transport,
-validate discovery and strict schemas, exercise errors and resources, and run a complete
-vehicle scenario.
+The suite contains more than 350 tests. Unit and property tests cover domain rules, exact money
+handling, date and path validation, recurrence boundaries, configuration, both clocks, document
+storage, and the full in-memory repository. Integration tests use real SQLite `:memory:`
+databases and migrations to verify constraints, indexes, foreign keys, stable ordering,
+pagination, transactions, rollback, all repositories, summaries, and the stdio process
+lifecycle. Contract tests connect an official SDK `Client` to the server through an in-memory
+transport and verify every tool surface, strict schemas, validation boundaries, safe business
+errors, resources, optional-field semantics, pagination, recurrence, and document linking.
 
-Coverage gates instrument the critical pure domain and error-presentation modules: lines,
-statements, and functions must be at least 90%, branches at least 85%. The integration and MCP
-adapters are tested behaviorally rather than included in that narrow instrumentation gate.
+Coverage gates instrument all application logic (domain, configuration, repositories,
+filesystem and clock adapters, presenters, and MCP server): lines, statements, and functions
+must be at least 90%, and branches at least 85%. Declarative database schema and executable
+entry-point scripts are covered by integration behavior instead of source instrumentation.
 
 `pnpm check` runs format checking, lint, strict TypeScript, coverage tests, and the production
 build. CI runs that command on every push and pull request.
@@ -198,4 +201,3 @@ Restore only while the server is stopped, and keep an additional copy of the rep
 - offset pagination rather than cursor pagination;
 - monetary tool inputs are denominated in euros; stored vehicle currency defaults to EUR;
 - no automatic notifications or background scheduler.
-

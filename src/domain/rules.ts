@@ -10,8 +10,15 @@ export const normalizeVin = (vin: string | undefined): string | undefined => {
   const normalized = vin?.trim().toUpperCase();
   return normalized === "" ? undefined : normalized;
 };
-export const isIsoDate = (value: string): boolean =>
-  (ISO_DATE.test(value) || ISO_DATE_TIME.test(value)) && !Number.isNaN(Date.parse(value));
+export const isIsoDate = (value: string): boolean => {
+  if (ISO_DATE.test(value)) {
+    const parsed = new Date(`${value}T00:00:00.000Z`);
+    return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+  }
+  if (!ISO_DATE_TIME.test(value) || Number.isNaN(Date.parse(value))) return false;
+  const canonical = value.length === 20 ? `${value.slice(0, -1)}.000Z` : value;
+  return new Date(value).toISOString() === canonical;
+};
 export const isNonNegativeInteger = (value: number): boolean =>
   Number.isSafeInteger(value) && value >= 0;
 

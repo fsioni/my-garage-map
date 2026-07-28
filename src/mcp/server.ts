@@ -628,6 +628,14 @@ export const createGarageServer = (runner: EffectRunner): McpServer => {
         .refine(
           (input) => input.dueDate !== undefined || input.dueMileageKm !== undefined,
           "At least dueDate or dueMileageKm is required",
+        )
+        .refine(
+          (input) => input.recurrenceMonths === undefined || input.dueDate !== undefined,
+          "recurrenceMonths requires dueDate",
+        )
+        .refine(
+          (input) => input.recurrenceKm === undefined || input.dueMileageKm !== undefined,
+          "recurrenceKm requires dueMileageKm",
         ),
     },
     (input) =>
@@ -728,17 +736,22 @@ export const createGarageServer = (runner: EffectRunner): McpServer => {
     {
       title: "Attach document",
       description: "Record a validated local document path without copying the file",
-      inputSchema: z.strictObject({
-        vehicleId: uuid,
-        maintenanceEventId: uuid.optional(),
-        expenseId: uuid.optional(),
-        type: text,
-        title: text,
-        localPath: z.string().min(1).max(2_000),
-        mimeType: z.string().trim().min(1).max(200).optional(),
-        recordedAt: isoDate,
-        notes,
-      }),
+      inputSchema: z
+        .strictObject({
+          vehicleId: uuid,
+          maintenanceEventId: uuid.optional(),
+          expenseId: uuid.optional(),
+          type: text,
+          title: text,
+          localPath: z.string().min(1).max(2_000),
+          mimeType: z.string().trim().min(1).max(200).optional(),
+          recordedAt: isoDate,
+          notes,
+        })
+        .refine(
+          (input) => input.maintenanceEventId === undefined || input.expenseId === undefined,
+          "A document can reference maintenance or an expense, not both",
+        ),
     },
     (input) =>
       execute(

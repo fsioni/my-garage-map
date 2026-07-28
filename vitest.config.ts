@@ -6,7 +6,15 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json-summary"],
-      include: ["src/domain/models.ts", "src/domain/rules.ts", "src/mcp/presenters.ts"],
+      include: [
+        "src/config/**/*.ts",
+        "src/domain/**/*.ts",
+        "src/infrastructure/clock/**/*.ts",
+        "src/infrastructure/database/in-memory-repository.ts",
+        "src/infrastructure/database/sqlite.ts",
+        "src/infrastructure/filesystem/**/*.ts",
+        "src/mcp/**/*.ts",
+      ],
       thresholds: {
         lines: 90,
         branches: 85,
